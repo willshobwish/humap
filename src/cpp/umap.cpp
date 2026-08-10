@@ -36,6 +36,7 @@
 #include "umap.h"
 #include "utils.h"
 
+#include <chrono>
 #include <iostream>
 
 namespace py = pybind11;
@@ -699,8 +700,8 @@ vector<vector<float>> umap::UMAP::multi_component_layout(umap::Matrix& data,
 vector<vector<float>> umap::UMAP::spectral_layout(umap::Matrix& data, 
 	const Eigen::SparseMatrix<float, Eigen::RowMajor>& graph, int dim)
 {
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 	// random initialization
 	std::srand(this->random_state);
 
@@ -1042,8 +1043,8 @@ tuple<vector<vector<int>>, vector<vector<float>>> umap::nearest_neighbors(umap::
 	int n_neighbors, string metric, map<string, string> knn_args, bool verbose, bool reproducible)
 {
 
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 
 	utils::log(verbose, "Finding nearest neighbors\n");
 
@@ -1296,8 +1297,8 @@ tuple<Eigen::SparseMatrix<float, Eigen::RowMajor>, vector<float>, vector<float>>
 	float local_connectivity, bool apply_set_operations, bool verbose, umap::UMAP* obj)
 {
 
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 
 	if( knn_indices.size() == 0 || knn_dists.size() == 0 ) {
 		tie(knn_indices, knn_dists) = umap::nearest_neighbors(X, n_neighbors, metric, obj->knn_args, verbose, obj->is_reproducible());

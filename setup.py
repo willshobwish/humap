@@ -7,7 +7,9 @@ from setuptools import setup, Extension, find_packages
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from pybind11 import get_cmake_dir
 
+import os
 import sys 
+from pathlib import Path
 
 __version__ = "0.2.9"
 
@@ -16,16 +18,51 @@ with open('README.md', 'r') as f:
 
 ext_modules = None 
 
+def eigen_include_dirs():
+    candidates = []
+
+    for env_var in ("EIGEN3_INCLUDE_DIR", "EIGEN_INCLUDE_DIR"):
+        value = os.environ.get(env_var)
+        if value:
+            candidates.append(Path(value))
+
+    prefix = Path(sys.prefix)
+    candidates.extend([
+        prefix / "Library" / "include" / "eigen3",
+        prefix / "Library" / "include",
+        prefix / "include" / "eigen3",
+        prefix / "include",
+        Path("C:/Eigen"),
+        Path("C:/Eigen/eigen3"),
+        Path("/usr/local/include/eigen3"),
+        Path("/usr/local/include"),
+        Path("/usr/include/eigen3"),
+    ])
+
+    include_dirs = []
+    seen = set()
+    for candidate in candidates:
+        if (candidate / "Eigen" / "Core").exists():
+            resolved = str(candidate)
+            if resolved not in seen:
+                include_dirs.append(resolved)
+                seen.add(resolved)
+
+    return include_dirs
+
+eigen_dirs = eigen_include_dirs()
+
 if sys.platform == 'win32':
     print("Compiling for Windows")
     ext_modules = [
-    	Pybind11Extension("_hierarchical_umap",
-    		["src/cpp/external/efanna/index.cpp", "src/cpp/external/efanna/index_graph.cpp", "src/cpp/external/efanna/index_kdtree.cpp", "src/cpp/external/efanna/index_random.cpp", "src/cpp/utils.cpp", "src/cpp/umap.cpp", "src/cpp/hierarchical_umap.cpp", "src/cpp/humap_binding.cpp"],
-    		language='c++',
-    		extra_compile_args = [ '/openmp',  '/DINFO', '-IC:/Eigen'],
-            extra_link_args = [ '/openmp', '/DINFO', '-IC:/Eigen'],
-    		define_macros = [('VERSION_INFO', __version__)],
-    		),
+        Pybind11Extension("_hierarchical_umap",
+            ["src/cpp/external/efanna/index.cpp", "src/cpp/external/efanna/index_graph.cpp", "src/cpp/external/efanna/index_kdtree.cpp", "src/cpp/external/efanna/index_random.cpp", "src/cpp/utils.cpp", "src/cpp/umap.cpp", "src/cpp/hierarchical_umap.cpp", "src/cpp/humap_binding.cpp"],
+            language='c++',
+            include_dirs=eigen_dirs,
+            extra_compile_args = [ '/openmp',  '/DINFO'],
+            extra_link_args = [],
+            define_macros = [('VERSION_INFO', __version__)],
+            ),
 
     ]
 elif sys.platform == 'darwin':
@@ -34,8 +71,9 @@ elif sys.platform == 'darwin':
     Pybind11Extension("_hierarchical_umap",
         ["src/cpp/external/efanna/index.cpp", "src/cpp/external/efanna/index_graph.cpp", "src/cpp/external/efanna/index_kdtree.cpp", "src/cpp/external/efanna/index_random.cpp", "src/cpp/utils.cpp", "src/cpp/umap.cpp", "src/cpp/hierarchical_umap.cpp", "src/cpp/humap_binding.cpp"],
         language='c++',
-        extra_compile_args = ['-O3', '-std=c++11', '-fPIC', '-fopenmp',  '-DINFO', '-I/usr/local/include'],
-        extra_link_args = ['-O3', '-std=c++11', '-fPIC', '-fopenmp', '-DINFO', '-I/usr/local/include'],
+        include_dirs=eigen_dirs,
+        extra_compile_args = ['-O3', '-std=c++11', '-fPIC', '-fopenmp',  '-DINFO'],
+        extra_link_args = ['-O3', '-std=c++11', '-fPIC', '-fopenmp', '-DINFO'],
         define_macros = [('VERSION_INFO', __version__)],
         ),
 
@@ -46,6 +84,7 @@ else:
     Pybind11Extension("_hierarchical_umap",
         ["src/cpp/external/efanna/index.cpp", "src/cpp/external/efanna/index_graph.cpp", "src/cpp/external/efanna/index_kdtree.cpp", "src/cpp/external/efanna/index_random.cpp", "src/cpp/utils.cpp", "src/cpp/umap.cpp", "src/cpp/hierarchical_umap.cpp", "src/cpp/humap_binding.cpp"],
         language='c++',
+        include_dirs=eigen_dirs,
         extra_compile_args = ['-O3', '-shared', '-std=c++11', '-fPIC', '-fopenmp', '-DINFO'],
         extra_link_args = ['-O3', '-shared', '-std=c++11', '-fPIC', '-fopenmp', '-DINFO'],
         define_macros = [('VERSION_INFO', __version__)],

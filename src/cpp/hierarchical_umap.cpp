@@ -494,8 +494,8 @@ humap::SparseComponents humap::HierarchicalUMAP::sparse_similarity(int level, in
 																   ) 
 {
 
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 
 	std::vector<std::vector<int> > indices_sim;
 
@@ -725,8 +725,8 @@ int humap::markov_chain(vector<vector<int>>& knn_indices,
 						bool reproducible)
 {	
 
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 	// std::srand(0);
 	auto begin_influence = clock::now();
 	
@@ -854,8 +854,8 @@ humap::SparseComponents humap::HierarchicalUMAP::compute_landmark_similarity(
 	int n_neighbors, 
 	int N)
 {
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 
 	auto before = clock::now();
 
@@ -924,8 +924,8 @@ void humap::HierarchicalUMAP::fit(py::array_t<float> X, py::array_t<int> y)
 {
 	std::srand(this->random_state);
 	
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 
 	auto hierarchy_before = clock::now();
 
@@ -1320,8 +1320,8 @@ Eigen::SparseMatrix<float, Eigen::RowMajor> humap::HierarchicalUMAP::get_data(in
 */
 vector<vector<float>> humap::HierarchicalUMAP::embed_data(int level, Eigen::SparseMatrix<float, Eigen::RowMajor>& graph, umap::Matrix& X)
 {
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 
 	auto before = clock::now(); 
 
@@ -1491,8 +1491,8 @@ py::array_t<float> humap::HierarchicalUMAP::project(int level, py::array_t<int> 
 */
 py::array_t<float> humap::HierarchicalUMAP::project_data(int level, vector<int> selected_indices)
 {
-	using clock = chrono::system_clock;
-	using sec = chrono::duration<float>;
+	using clock = std::chrono::system_clock;
+	using sec = std::chrono::duration<float>;
 	
 	vector<bool> is_in_it(this->metadata[level-1].size, false);
 	vector<int> indices_next_level;
