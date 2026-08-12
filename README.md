@@ -70,11 +70,12 @@ For manually installing HUMAP, download the project and proceed as follows:
 
 .. code:: bash
  	
- 	python setup.py bdist_wheel
+ 	python -m pip install build
+ 	python -m build --wheel
 
 .. code:: bash
 
- 	pip install dist/humap*.whl
+ 	python -m pip install dist/humap*.whl
 
 
 --------------

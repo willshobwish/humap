@@ -62,6 +62,7 @@ if sys.platform == 'win32':
             extra_compile_args = [ '/openmp',  '/DINFO'],
             extra_link_args = [],
             define_macros = [('VERSION_INFO', __version__)],
+            cxx_std=11,
             ),
 
     ]
@@ -104,9 +105,18 @@ setup(
     long_description_content_type='text/markdown',
     ext_modules=ext_modules,
     license='MIT',
-    extras_require={"test": "pytest"},
+    install_requires=[
+        "numpy>=1.23.0",
+        "scipy>=1.9.3",
+        "scikit-learn>=1.1.3",
+        "pynndescent>=0.5.8",
+        "pybind11>=2.10.0",
+    ],
+    extras_require={
+        "test": ["pytest"],
+        "plot": ["matplotlib"],
+    },
     cmdclass={"build_ext": build_ext},
-    # install_requires=['numpy>=1.23.0', 'pybind11==2.10.1', 'scikit-learn>=1.1.3', 'scipy>=1.9.3'],
     packages=['humap'],
     zip_safe=False,
 )
