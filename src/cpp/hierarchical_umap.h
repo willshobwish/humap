@@ -284,10 +284,10 @@ private:
 	bool reproducible;
 	bool low_memory = true;
 	
-	float min_dist = 0.15;
-	float a = -1.0, b = -1.0;
-	float percent_glue = 0.0;
-	float _fixing_term = 0.01;
+	float min_dist = 0.15f;
+	float a = -1.0f, b = -1.0f;
+	float percent_glue = 0.0f;
+	float _fixing_term = 0.01f;
 
 	string output_filename = "";
 	

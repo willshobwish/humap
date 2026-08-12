@@ -77,8 +77,8 @@ using namespace efanna2e;
 namespace umap {
 
 
-static float SMOOTH_K_TOLERANCE = 1e-5;
-static float MIN_K_DIST_SCALE = 1e-3;
+static float SMOOTH_K_TOLERANCE = 1e-5f;
+static float MIN_K_DIST_SCALE = 1e-3f;
 
 
 /**
@@ -100,10 +100,6 @@ public:
 
 private:
     RandomGenerator() {
-        std::random_device rd;
-
-		// if
-        auto seed = 0;// std::chrono::high_resolution_clock::now().time_since_epoch().count();
         mt.seed(0);
     }
     ~RandomGenerator() {}
@@ -132,8 +128,8 @@ public:
 	*/
 	Matrix(Eigen::SparseMatrix<float, Eigen::RowMajor> eigen_sparse_): eigen_sparse(eigen_sparse_), sparse(true)
 	{
-		shape_.push_back(eigen_sparse_.rows());
-		shape_.push_back(eigen_sparse_.cols());
+		shape_.push_back(utils::checked_int_index(eigen_sparse_.rows(), "matrix rows"));
+		shape_.push_back(utils::checked_int_index(eigen_sparse_.cols(), "matrix columns"));
 	}
 
 	/**
@@ -142,8 +138,8 @@ public:
 	* @param dense_matrix_ Container representing data points 
 	*/
 	Matrix(vector<vector<float>> dense_matrix_): dense_matrix(dense_matrix_), sparse(false) {
-		shape_.push_back(dense_matrix_.size());
-		shape_.push_back(dense_matrix_[0].size());
+		shape_.push_back(utils::checked_int_size(dense_matrix_.size(), "matrix rows"));
+		shape_.push_back(utils::checked_int_size(dense_matrix_[0].size(), "matrix columns"));
 	}
 
 	/**
@@ -152,7 +148,7 @@ public:
 	* @param sparse_matrix_ Container of SparseData representing the columns with non-zero elements
 	*/
 	Matrix(vector<utils::SparseData> sparse_matrix_): sparse_matrix(sparse_matrix_), sparse(true) {
-		shape_.push_back(sparse_matrix_.size());
+		shape_.push_back(utils::checked_int_size(sparse_matrix_.size(), "matrix rows"));
 		shape_.push_back(-1); // TODO: how to define?
 	}
 
@@ -163,7 +159,7 @@ public:
 	* @param dim int representing the matrix dimensionality
 	*/
 	Matrix(vector<utils::SparseData> sparse_matrix_, int dim): sparse_matrix(sparse_matrix_), sparse(true) {
-		shape_.push_back(sparse_matrix_.size());
+		shape_.push_back(utils::checked_int_size(sparse_matrix_.size(), "matrix rows"));
 		shape_.push_back(dim); 
 	}
 
@@ -357,12 +353,12 @@ private:
 	
 	float _a, _b;
 	float local_connectivity;
-	float a = -1.0, b = -1.0;
-	float _fixing_term = 0.01;
-	float _initial_alpha = 1.0;
-	float repulsion_strength = 1.0;
-	float negative_sample_rate = 5.0;	
-	float spread = 1.0, min_dist = 0.001;
+	float a = -1.0f, b = -1.0f;
+	float _fixing_term = 0.01f;
+	float _initial_alpha = 1.0f;
+	float repulsion_strength = 1.0f;
+	float negative_sample_rate = 5.0f;	
+	float spread = 1.0f, min_dist = 0.001f;
 
 	string init = "Spectral";
 
@@ -413,7 +409,7 @@ tuple<float, float> find_ab_params(float spread, float min_dist);
 
 // construct the graph representing the similarity between each data sample
 tuple<Eigen::SparseMatrix<float, Eigen::RowMajor>, vector<float>, vector<float>> fuzzy_simplicial_set(
-	umap::Matrix& X, int n_neighbors, float random_state, string metric, 
+	umap::Matrix& X, int n_neighbors, int random_state, string metric, 
 	vector<vector<int>>& knn_indices, vector<vector<float>>& knn_dists,
 	float local_connectivity=1.0, bool apply_set_operations=true, bool verbose=false, umap::UMAP* obj=0);
 
