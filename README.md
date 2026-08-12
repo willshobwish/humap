@@ -105,6 +105,13 @@ The simplest usage of HUMAP is as it follows:
 
 Refer to *notebooks/* for complete examples.
 
+To display the level 2 MNIST embedding as a scatter plot:
+
+.. code:: bash
+
+	python -m pip install "humap[plot]"
+	python examples/plot_mnist_humap.py
+
 **C++ UMAP implementation**
 
 You can also fit a one-level HUMAP hierarchy, which essentially fits UMAP projection.
