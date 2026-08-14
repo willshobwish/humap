@@ -43,6 +43,8 @@
 #include <numeric>
 #include <iostream>
 #include <algorithm>
+#include <limits>
+#include <stdexcept>
 
 #include <Eigen/Sparse>
 
@@ -53,6 +55,23 @@ namespace py = pybind11;
 using namespace std;
 
 namespace utils {
+
+inline int checked_int_size(std::size_t value, const char* context)
+{
+  if( value > static_cast<std::size_t>(std::numeric_limits<int>::max()) )
+    throw std::overflow_error(std::string(context) + " exceeds int range");
+
+  return static_cast<int>(value);
+}
+
+inline int checked_int_index(Eigen::Index value, const char* context)
+{
+  if( value > static_cast<Eigen::Index>(std::numeric_limits<int>::max()) ||
+      value < static_cast<Eigen::Index>(std::numeric_limits<int>::min()) )
+    throw std::overflow_error(std::string(context) + " exceeds int range");
+
+  return static_cast<int>(value);
+}
 
 
 /**

@@ -70,11 +70,12 @@ For manually installing HUMAP, download the project and proceed as follows:
 
 .. code:: bash
  	
- 	python setup.py bdist_wheel
+ 	python -m pip install build
+ 	python -m build --wheel
 
 .. code:: bash
 
- 	pip install dist/humap*.whl
+ 	python -m pip install dist/humap*.whl
 
 
 --------------
@@ -103,6 +104,13 @@ The simplest usage of HUMAP is as it follows:
 	embedding2 = hUmap.transform(2)
 
 Refer to *notebooks/* for complete examples.
+
+To display the level 2 MNIST embedding as a scatter plot:
+
+.. code:: bash
+
+	python -m pip install "humap[plot]"
+	python examples/plot_mnist_humap.py
 
 **C++ UMAP implementation**
 

@@ -50,8 +50,8 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<float>> utils::to_row
 
   for( int i = 0; i < M.outerSize(); ++i )
     for( typename Eigen::SparseMatrix<float, Eigen::RowMajor>::InnerIterator it(M, i); it; ++it ) {
-      rows.push_back(it.row());
-      cols.push_back(it.col());
+      rows.push_back(utils::checked_int_index(it.row(), "sparse row"));
+      cols.push_back(utils::checked_int_index(it.col(), "sparse column"));
       vals.push_back(it.value());
     }
 
@@ -119,7 +119,7 @@ Eigen::SparseMatrix<float, Eigen::RowMajor> utils::create_sparse(const vector<ut
 float utils::rdist(const vector<float>& x, const vector<float>& y)
 {
     float result = 0.0;
-    int dim = x.size();
+    int dim = utils::checked_int_size(x.size(), "vector dimension");
 
     for( int i = 0; i < dim; ++i ) {
         float diff = x[i]-y[i];
@@ -155,8 +155,8 @@ float utils::clip(float value)
 vector<vector<float>> utils::pairwise_distances(vector<vector<float>>& X)
 {
 
-  int n = X.size();
-  int d = X[0].size();
+  int n = utils::checked_int_size(X.size(), "matrix rows");
+  int d = utils::checked_int_size(X[0].size(), "matrix columns");
 
 
   vector<vector<float>> pd(n, vector<float>(n, 0.0));
