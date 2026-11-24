@@ -87,68 +87,39 @@ vector<vector<float>> humap::convert_to_vector(const py::array_t<float>& v)
 * Performs depth first search on a point neighborhood
 *
 * @param n_neighbors int representing the number of neighbors
-* @param neighbors int* representing the neighbors of each data point
+* @param index int representing the starting point
 * @param cols Container representing the neighborhoods
-* @param strength Container representing the strength of the edge
 * @param owners Container the landmark owners
 * @param is_landmark Container to specify whether a point is a landmark or not
 * @return int representing the landmark
 */
-int humap::HierarchicalUMAP::depth_first_search(int n_neighbors, int* neighbors, vector<int>& cols, vector<float>& strength, vector<int>& owners, vector<int>& is_landmark)
+int humap::HierarchicalUMAP::depth_first_search(int index, int n_neighbors, const vector<int>& cols,
+                                           const vector<int>& owners, const vector<int>& is_landmark)
 {
-	bool* visited = new bool[is_landmark.size()*sizeof(bool)];
-	fill(visited, visited+is_landmark.size(), false);
-	
-	int* neighbors_search = new int[n_neighbors*sizeof(int)];
+	vector<bool> visited(is_landmark.size(), false);
 	for( int i = 1; i < n_neighbors; ++i ) {
-		int neighbor = *(neighbors + i);
-		int landmark = -1;
-	
-		if( !*(visited + neighbor) ) {
-			
-			stack<int> p;
-			p.push(neighbor);
-			while( !p.empty() ) {
-				int u = p.top();
-				p.pop();
+		stack<int> pending;
+		pending.push(cols[index*n_neighbors + i]);
+		while( !pending.empty() ) {
+			int point = pending.top();
+			pending.pop();
+			if( visited[point] )
+				continue;
 
-				visited[u] = true;
+			visited[point] = true;
+			if( is_landmark[point] != -1 )
+				return point;
+			if( owners[point] != -1 )
+				return owners[point];
 
-				if( is_landmark[u] != -1 ) {
-					landmark = u;
-					break;
-				} else if( owners[u] != -1 ) {
-					landmark = owners[u];
-					break;
-				}
-
-				for( int j = 0; j < n_neighbors; ++j ) 
-					neighbors_search[j] = cols[u*n_neighbors + j];
-
-				for( int j = 1; j < n_neighbors; ++j ) {
-					int v = neighbors_search[j];
-					if( !visited[v] )
-						p.push(v);
-				}
+			for( int j = 1; j < n_neighbors; ++j ) {
+				int neighbor = cols[point*n_neighbors + j];
+				if( !visited[neighbor] )
+					pending.push(neighbor);
 			}
-			
-
 		}
-		
-		if( landmark != -1 ) {
-			
-			// free(neighbors);
-			
-			// neighbors = 0;
-			free(visited);
-			visited = 0;
-			free(neighbors_search);
-			neighbors_search = 0;
-			return landmark;
-		}
-
 	}
-	
+
 	return -1;
 }
 
@@ -172,7 +143,6 @@ void humap::HierarchicalUMAP::associate_to_landmarks(int n, int n_neighbors, vec
 													 vector<vector<int>>& association, vector<int>& is_landmark, 
 													 vector<int>& count_influence, vector<vector<float>>& knn_dists)
 {
-	int* neighbors = new int[n_neighbors*sizeof(int)];
 
 	for( int i = 0; i < n; ++i ) {
 
@@ -184,13 +154,9 @@ void humap::HierarchicalUMAP::associate_to_landmarks(int n, int n_neighbors, vec
 		association[landmark].push_back(i);
 		count_influence[i]++;
 
-		for( int j = 0; j < n_neighbors; ++j ) {
-			neighbors[j] = cols[landmark*n_neighbors + j];
-		}
-
 		for( int j = 1; j < n_neighbors; ++j ) {
 
-			int neighbor = neighbors[j];
+			int neighbor = cols[landmark*n_neighbors + j];
 
 			if( is_landmark[neighbor] != -1 ) {
 				continue;
@@ -213,10 +179,6 @@ void humap::HierarchicalUMAP::associate_to_landmarks(int n, int n_neighbors, vec
 
 	}
 
-	if( neighbors ) {
-		free(neighbors);
-		neighbors = 0;
-	}
 
 }
 
@@ -239,8 +201,6 @@ void humap::HierarchicalUMAP::associate_to_landmarks(int n, int n_neighbors, int
 								   					 vector<vector<int>>& association, vector<int>& count_influence, vector<int>& is_landmark, 
 								   					 vector<vector<float>>& knn_dists)
 {
-	int* neighbors = new int[n_neighbors*sizeof(int)];
-	int count_search = 0;
 	
 	for( int i = 0; i < n; ++i ) {
 		
@@ -248,9 +208,6 @@ void humap::HierarchicalUMAP::associate_to_landmarks(int n, int n_neighbors, int
 		 if( is_landmark[index] != -1 ||  owners[index] != -1 )
 			continue;
 
-		// for( int j = 0; j < n_neighbors; ++j ) {
-		// 	neighbors[j] = cols[index*n_neighbors + j];
-		// }
 		
 		
 		bool found = false;
@@ -280,9 +237,8 @@ void humap::HierarchicalUMAP::associate_to_landmarks(int n, int n_neighbors, int
 		
 		if( !found ) {
 
-			count_search++;
 		
-			int landmark = this->depth_first_search(n_neighbors, neighbors, cols, strength, owners, is_landmark);
+			int landmark = this->depth_first_search(index, n_neighbors, cols, owners, is_landmark);
 		
 			if( landmark != -1 ) {
 				strength[index] = 0;//knn_dists[landmark]
@@ -299,10 +255,6 @@ void humap::HierarchicalUMAP::associate_to_landmarks(int n, int n_neighbors, int
 	
 	}
 	
-	if( neighbors ) {
-		free(neighbors);
-		neighbors = 0;
-	}
 	
 }
 
@@ -1085,19 +1037,14 @@ void humap::HierarchicalUMAP::fit(py::array_t<float> X, py::array_t<int> y)
 								     this->metadata[level].strength, this->metadata[level].owners, this->metadata[level].indices, 
 									 this->metadata[level].association, is_landmark, this->metadata[level].count_influence, this->reducers[level].knn_dists());
 				
-		int n = 0;
+		vector<int> indices_not_associated;
 		for( int i = 0; i < this->metadata[level].size; ++i ) {
 			if( this->metadata[level].owners[i] == -1 )
-				n++;
+				indices_not_associated.push_back(i);
 		}
 
-		int* indices_not_associated = new int[sizeof(int)*n];
-		for( int i = 0, j = 0; i < this->metadata[level].size; ++i )
-			if( this->metadata[level].owners[i] == -1.0 )
-				*(indices_not_associated + j++) = i;
-
-
-		this->associate_to_landmarks(n, this->n_neighbors, indices_not_associated, this->reducers[level].cols,
+		int n = utils::checked_int_size(indices_not_associated.size(), "unassociated points");
+		this->associate_to_landmarks(n, this->n_neighbors, indices_not_associated.data(), this->reducers[level].cols,
 									  this->metadata[level].strength, this->metadata[level].owners, this->metadata[level].indices, 
 									  this->metadata[level].association, this->metadata[level].count_influence, 
 									  is_landmark, this->reducers[level].knn_dists());
@@ -1111,8 +1058,6 @@ void humap::HierarchicalUMAP::fit(py::array_t<float> X, py::array_t<int> y)
 		
 		sec level_duration = clock::now() - level_before;
 		utils::log(this->verbose, "L"+std::to_string(level+1)+" - Construction: done in " + std::to_string(level_duration.count()) + "\n\n");
-
-		free(indices_not_associated);
 	}
 
 	sec hierarchy_duration = clock::now() - hierarchy_before;

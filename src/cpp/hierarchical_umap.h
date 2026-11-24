@@ -365,8 +365,8 @@ private:
 								vector<int>& is_landmark, vector<vector<float>>& knn_dists );
 
 	// searches for a point owner using the knn structure computed in UMAP
-	int depth_first_search(int n_neighbors, int* neighbors, vector<int>& cols, 
-	  					   vector<float>& strength, vector<int>& owners, vector<int>& is_landmark);
+	int depth_first_search(int index, int n_neighbors, const vector<int>& cols,
+						   const vector<int>& owners, const vector<int>& is_landmark);
 
 	// returns the influence of each index
 	vector<int> get_influence_by_indices(int level, vector<int> indices);

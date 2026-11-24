@@ -941,7 +941,7 @@ tuple<vector<float>, vector<float>> umap::smooth_knn_dist(vector<vector<float>>&
 
 	float mean_distances = 0.0;
 
-	#pragma omp parallel for
+	#pragma omp parallel for reduction(+:mean_distances)
 	for (int i = 0; i < n_distances; ++i) {
 		mean_distances += static_cast<float>(accumulate( distances[i].begin(), distances[i].end(), 0.0));
 	}
@@ -1320,17 +1320,15 @@ tuple<Eigen::SparseMatrix<float, Eigen::RowMajor>, vector<float>, vector<float>>
 
 	vector<float> vals_transition(vals.begin(), vals.end());
 
-	Eigen::SparseMatrix<float, Eigen::RowMajor> result(X.size(), X.size());
-	result.reserve(Eigen::VectorXi::Constant(X.size(), 2*n_neighbors)); // TODO: verificar se é assim (ou com int)
-	// result.reserve(rows*2*n_neighbors);
+	// Eigen's sparse insertion mutates shared storage, even for different rows.
+	Eigen::SparseMatrix<float, Eigen::RowMajor> result =
+		utils::create_sparse(rows, cols, vals, X.size(), 2*n_neighbors);
 	
 	#pragma omp parallel for
 	for( int i = 0; i < vals.size(); ++i ) {
-		result.insert(rows[i], cols[i]) = vals[i];
 		vals_transition[i] = vals_transition[i]/sum_vals[rows[i]];
 	}
 	obj->vals_transition = vals_transition;
-	result.makeCompressed();
 
 
 	obj->transition_matrix = 1.0*result;//Eigen::SparseMatrix<float, Eigen::RowMajor>(result);
